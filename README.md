@@ -40,7 +40,7 @@ The dataset used in this project was sourced from Kaggle.
 
 | Column Name   | Description                                   | Data Type      | Notes |
 |--------------|-----------------------------------------------|----------------|------|
-| product_id   | Unique product ID                             | VARCHAR        | Primary key |
+| product_id   | Unique product ID                             | VARCHAR(225)   | Primary key |
 | category     | Type of product                               | VARCHAR(225)   | |
 | color        | Color of product                              | VARCHAR(225)   | |
 | size         | Size of product                               | VARCHAR(225)   | |
@@ -49,3 +49,28 @@ The dataset used in this project was sourced from Kaggle.
 | cost_price   | Cost price of the product                     | FLOAT          | |
 | list_price   | Listed selling price before any discount      | FLOAT          | |
 
+---
+
+### 🛍️ Store Data
+
+| Column Name   | Description                                   | Data Type      | Notes |
+|--------------|-----------------------------------------------|----------------|------|
+| store_id      | Unique store ID                               | VARCHAR        | Primary key |
+| store_name    | Name of store                                 | VARCHAR(225)   | |
+| region        | Locarion of store                             | VARCHAR(225)   | |
+| store_size_m2 | Size of store in m2                           | INT            | |
+
+---
+
+### 💰 Sales Table
+
+| Column Name     | Description                                   | Data Type      | Notes |
+|-----------------|-----------------------------------------------|----------------|------|
+| transaction_id  | Unique transaction ID                         | VARCHAR        | Primary key |
+| date            | Date of transaction (YYYY-MM-DD)              | DATE           | |
+| product_id      | Unique product ID                             | VARCHAR(225)   | Forigen key |
+| store_id        | Unique store ID                               | VARCHAR(225)   | Forigen key |
+| customer_id     | Unique custoemr ID                            |
+| quantity
+| discount
+| returned 
