@@ -60,13 +60,17 @@ WHERE
     AND customer_id !~ '^C[0-9]{6}$';
 -- All customer_id values conform to the expected format
 
-SELECT MIN(age) AS min_age, MAX(age) AS max_age FROM customers_raw;
+SELECT MIN(age) AS min_age, MAX(age) AS max_age
+FROM customers_raw;
 -- Min age = 16, Max age = 69 (within reasonable bounds)
 
 SELECT gender, COUNT(*) FROM customers_raw GROUP BY gender;
 -- 298 rows have gender = '???' → classify as 'Other' during cleaning
 
-SELECT location, COUNT(*) FROM customers_raw GROUP BY location;
+SELECT location, COUNT(*)
+FROM customers_raw
+GROUP BY
+    location;
 
 SELECT email
 FROM customers_raw
@@ -134,7 +138,10 @@ WHERE
     product_id !~ '^P[0-9]{6}$';
 -- All product_id values follow the expected format
 
-SELECT category, COUNT(*) FROM products_raw GROUP BY category;
+SELECT category, COUNT(*)
+FROM products_raw
+GROUP BY
+    category;
 -- 499 entries with category = '???'
 
 SELECT color, COUNT(*) FROM products_raw GROUP BY color;
@@ -286,7 +293,8 @@ HAVING
 SELECT * FROM sales_raw WHERE transaction_id !~ '^T[0-9]{7}$';
 -- All transaction_id values follow the expected format
 
-SELECT MIN(transaction_date), MAX(transaction_date) FROM sales_raw;
+SELECT MIN(transaction_date), MAX(transaction_date)
+FROM sales_raw;
 -- Sales data spans ~4 years
 
 SELECT * FROM sales_raw WHERE product_id !~ '^P[0-9]{6}$';
@@ -310,86 +318,3 @@ FROM sales_raw;
 SELECT MIN(returned) AS min_returned, MAX(returned) AS max_returned
 FROM sales_raw;
 -- Returned quantities within logical bounds
-
--- =====================================================
--- CROSS-TABLE INTEGRITY VALIDATION
--- =====================================================
--- Purpose:
--- Validate referential integrity between fact (sales)
--- and dimension tables prior to cleaning.
--- No data is modified in this section.
-
--- =====================================================
--- SALES → CUSTOMERS REFERENCE CHECK
--- =====================================================
-
-SELECT COUNT(*) AS orphaned_customer_sales
-FROM sales_raw s
-WHERE
-    s.customer_id IS NOT NULL
-    AND NOT EXISTS (
-        SELECT 1
-        FROM customers_raw c
-        WHERE
-            c.customer_id = s.customer_id
-    );
--- Result: 0
--- All non-NULL customer_id values in sales_raw
--- correctly reference existing customers.
--- Guest purchases (NULL customer_id) are valid and excluded.
-
--- =====================================================
--- SALES → PRODUCTS REFERENCE CHECK
--- =====================================================
-
-SELECT s.product_id, COUNT(*) AS affected_sales_count
-FROM sales_raw s
-WHERE
-    s.product_id IS NOT NULL
-    AND NOT EXISTS (
-        SELECT 1
-        FROM products_raw p
-        WHERE
-            p.product_id = s.product_id
-    )
-GROUP BY
-    s.product_id;
--- Result:
--- Product ID 'P999999' does not exist in products_raw
--- and appears in 200 sales records.
--- Indicates orphaned product references.
-
--- =====================================================
--- SALES → STORES REFERENCE CHECK
--- =====================================================
-
-SELECT s.store_id, COUNT(*) AS affected_sales_count
-FROM sales_raw s
-WHERE
-    s.store_id IS NOT NULL
-    AND NOT EXISTS (
-        SELECT 1
-        FROM stores_raw st
-        WHERE
-            st.store_id = s.store_id
-    )
-GROUP BY
-    s.store_id;
--- Result:
--- Store ID 'S999' does not exist in stores_raw
--- and appears in 200 sales records.
--- Indicates orphaned store references.
-
--- =====================================================
--- ANOMALY VERIFICATION (DRILL-DOWN)
--- =====================================================
-
-SELECT *
-FROM sales_raw
-WHERE
-    store_id = 'S999'
-    AND product_id = 'P999999';
--- Example transaction:
--- Transaction ID 'T0019535' references both an invalid
--- store ('S999') and an invalid product ('P999999'),
--- confirming a genuine referential integrity issue.
