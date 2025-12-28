@@ -1,29 +1,15 @@
 # Sales Data Cleaning in SQL
 
-An end-to-end SQL data cleaning and validation project demonstrating:
+An **end-to-end SQL data cleaning and validation project** demonstrating:
 
-- Column-level data profiling
-- Rule-based data standardisation
-- Cross-table integrity checks
-- Business-aligned data quality validation
-
-applied to a real-world retail sales dataset.
-
-This project is structured as a portfolio-grade SQL case study, emphasising reproducibility, transparency, and analytical trust.
-
----
-# Sales Data Cleaning in SQL
-
-An end-to-end SQL data cleaning and validation project demonstrating:
-
-- Column-level data profiling
-- Rule-based data standardisation
-- Cross-table integrity checks
-- Business-aligned data quality validation
+- Column-level data profiling  
+- Rule-based data standardisation  
+- Cross-table integrity checks  
+- Business-aligned data quality validation  
 
 applied to a real-world retail sales dataset.
 
-This project is structured as a portfolio-grade SQL case study, emphasising reproducibility, transparency, and analytical trust.
+This project is structured as a **portfolio-grade SQL case study**, emphasising reproducibility, transparency, and analytical trust.
 
 ---
 
@@ -39,55 +25,70 @@ The dataset used in this project was sourced from Kaggle.
 
 ## 📘 Data Dictionary
 
-## 🤵 Customer Data
+### 🤵 Customer Data
 
-| Column Name   | Description                    | Data Type     | Notes |
-|--------------|--------------------------------|---------------|------|
-| customer_id  | Unique customer identifier     | VARCHAR(7)    | Primary key |
-| age          | Customer age                   | INT           | |
-| gender       | Customer gender                | VARCHAR(6)    | Null values classified as `Other` |
-| email        | Customer email address         | VARCHAR(255)  | |
+| Column Name  | Description                | Data Type    | Notes |
+|-------------|----------------------------|--------------|------|
+| customer_id | Unique customer identifier | VARCHAR(7)   | Primary key |
+| age         | Customer age               | INT          | |
+| gender      | Customer gender            | VARCHAR(6)   | Null values classified as `Other` |
+| email       | Customer email address     | VARCHAR(255) | Mandatory field |
 
 ---
 
-## 👕 Product Data
+### 👕 Product Data
 
-| Column Name   | Description                                   | Data Type      | Notes |
-|--------------|-----------------------------------------------|----------------|------|
-| product_id   | Unique product ID                             | VARCHAR(225)   | Primary key |
-| category     | Type of product                               | VARCHAR(225)   | |
-| color        | Color of product                              | VARCHAR(225)   | |
-| size         | Size of product                               | VARCHAR(225)   | |
-| season       | Season the product is intended for            | VARCHAR(225)   | |
-| supplier     | Supplier of the product                       | VARCHAR(225)   | |
-| cost_price   | Cost price of the product                     | FLOAT          | |
-| list_price   | Listed selling price before any discount      | FLOAT          | |
+| Column Name  | Description                              | Data Type    | Notes |
+|-------------|------------------------------------------|--------------|------|
+| product_id  | Unique product identifier                | VARCHAR(225) | Primary key |
+| category    | Product category                         | VARCHAR(225) | |
+| color       | Product colour                           | VARCHAR(225) | |
+| size        | Product size                             | VARCHAR(225) | |
+| season      | Intended season                          | VARCHAR(225) | |
+| supplier    | Product supplier                         | VARCHAR(225) | |
+| cost_price  | Cost price of the product                | FLOAT        | |
+| list_price  | Listed selling price (pre-discount)      | FLOAT        | |
 
 ---
 
 ### 🛍️ Store Data
 
-| Column Name     | Description                     | Data Type     | Notes |
-|-----------------|---------------------------------|---------------|------|
-| store_id        | Unique store ID                 | VARCHAR(225)  | Primary key |
-| store_name      | Name of store                   | VARCHAR(225)  | |
-| region          | Location of store               | VARCHAR(225)  | |
-| store_size_m2   | Size of store in square metres  | INT           | |
+| Column Name    | Description                    | Data Type    | Notes |
+|---------------|--------------------------------|--------------|------|
+| store_id      | Unique store identifier        | VARCHAR(225) | Primary key |
+| store_name    | Store name                     | VARCHAR(225) | |
+| region        | Store location / region        | VARCHAR(225) | |
+| store_size_m2 | Store size in square metres    | INT          | |
 
 ---
 
 ### 💰 Sales Data
 
-| Column Name     | Description                                   | Data Type      | Notes |
-|-----------------|-----------------------------------------------|----------------|------|
-| transaction_id  | Unique transaction ID                         | VARCHAR(225)   | Primary key |
-| date            | Date of transaction (YYYY-MM-DD)              | DATE           | |
-| product_id      | Unique product ID                             | VARCHAR(225)   | Foreign key |
-| store_id        | Unique store ID                               | VARCHAR(225)   | Foreign key |
-| customer_id     | Unique customer ID                            | VARCHAR(225)   | Foreign key |
-| quantity        | Quantity of items purchased                   | INT            | |
-| discount        | Discount applied to original price            | FLOAT          | |
-| returned        | Quantity of items returned                    | INT            | |
+| Column Name     | Description                              | Data Type    | Notes |
+|-----------------|------------------------------------------|--------------|------|
+| transaction_id  | Unique transaction identifier            | VARCHAR(225) | Primary key |
+| date            | Transaction date (YYYY-MM-DD)            | DATE         | |
+| product_id      | Product identifier                       | VARCHAR(225) | Foreign key |
+| store_id        | Store identifier                         | VARCHAR(225) | Foreign key |
+| customer_id     | Customer identifier                      | VARCHAR(225) | Foreign key |
+| quantity        | Quantity purchased                       | INT          | |
+| discount        | Discount applied to list price           | FLOAT        | |
+| returned        | Quantity of items returned               | INT          | |
+
+---
+
+## ❗ Business Problem
+
+A retail organisation has accumulated historical data relating to **customers, products, stores, and sales**. However, the raw dataset contains multiple data quality issues that could undermine analytical accuracy and decision-making.
+
+Before delivering dashboards to **Senior Leadership Team (SLT)** stakeholders, the business required a comprehensive data quality assessment to ensure the dataset was **reliable, consistent, and analytically sound**.
+
+My responsibility was to:
+
+- Validate the dataset end-to-end  
+- Apply consistent data cleaning rules  
+- Perform cross-table integrity checks  
+- Deliver a **clean, trusted dataset** ready for analysis and reporting  
 
 ---
 
@@ -95,9 +96,95 @@ The dataset used in this project was sourced from Kaggle.
 
 The following data quality rules were applied consistently across the dataset:
 
-- Primary keys must be non-null and unique
-- Foreign key values must exist in parent tables
+- Primary keys must be **non-null and unique**
+- Foreign key values must exist in **parent tables**
 - Mandatory fields must be populated
-- Numerical values must fall within realistic ranges
-- No silent corrections of anomalous values
+- Numerical values must fall within **realistic ranges**
+- No silent corrections of anomalous values (issues are flagged, not overwritten)
+
+---
+
+## 🪜 Step-by-Step Walkthrough
+
+1. Create a database and schema to store raw, unmodified source data  
+2. Load CSV files into SQL staging tables  
+3. Perform table-level profiling and cross-table data quality validation  
+4. Create a separate schema to hold cleaned, analysis-ready data  
+5. Populate clean tables from raw data  
+6. Apply documented cleaning rules to resolve data quality issues  
+
+---
+
+## 1️⃣ Database Schema Setup
+
+- PostgreSQL was used as the database engine, with **pgAdmin** and the **terminal** for database administration.
+- A database named `retail_data` was created to store all project data.
+- Separate schemas were created to logically organise raw tables.
+- Source CSV files were ingested into SQL tables without enforcing constraints.
+- Primary and foreign key constraints were not applied at this stage due to raw data.
+
+---
+
+## 2️⃣ Profiling Stage
+
+**Data profiling** is a systematic assessment of data quality at both column-level and cross-table level, used to inform cleaning and validation rules.
+
+This section highlights the key data quality issues identified, alongside representative SQL queries used to uncover them.
+
+---
+
+### 👤 Customers Table
+
+- **Total records:** 25,000
+
+**Issues identified:**
+
+| Issue ID | Table          | Column | Issue Description        | Records Affected |
+|--------|----------------|--------|--------------------------|------------------|
+| CUST_01 | customers_raw | email  | NULL email values        | 496 |
+| CUST_02 | customers_raw | gender | Invalid placeholder `'???'` | 298 |
+
+```sql
+-- CUST_01: Identify customers with missing email addresses
+SELECT COUNT(*)
+FROM customers_raw
+WHERE email IS NULL;
+
+-- CUST_02: Identify invalid gender placeholder values
+SELECT COUNT(*)
+FROM customers_raw
+WHERE gender = '???';
+```
+---
+
+### 👕 Products Table
+
+- **Total records:** 50,000
+
+**Issues identified:**
+
+| Issue ID | Table        | Column(s)               | Issue Description                     | Records Affected |
+|--------|--------------|-------------------------|---------------------------------------|------------------|
+| PROD_01 | products_raw | color                   | NULL color values                     | 990              |
+| PROD_02 | products_raw | category                | Invalid placeholder `'???'`           | 499              |
+| PROD_03 | products_raw | cost_price, list_price  | Cost price greater than list price    | 8,582            |
+
+```sql
+-- PROD_01: Identify missing colour values
+SELECT COUNT(*)
+FROM products_raw
+WHERE color IS NULL;
+
+-- PROD_02: Identify invalid category placeholder values
+SELECT COUNT(*)
+FROM products_raw
+WHERE category = '???';
+
+-- PROD_03: Identify pricing logic violations
+SELECT COUNT(*)
+FROM products_raw
+WHERE cost_price > list_price;
+```
+
+  
 
