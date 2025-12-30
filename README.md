@@ -186,5 +186,62 @@ FROM products_raw
 WHERE cost_price > list_price;
 ```
 
+---
+
+### 🛍️ Sales Table
+
+- **Total records:** 50,000
+
+**Issues identified:**
+
+| Issue ID | Table        | Column(s)               | Issue Description                     | Records Affected |
+|--------|--------------|--------------------------|---------------------------------------|------------------|
+| SALE_01 | sales_raw   | customer_id              | NULL customer_id value                | 1,844            |
+| SALE_02 | sales_raw   | discount                 | NULL discount value                   | 2,583            |
+
+
+```sql
+-- SALE_01: Identify missing customer_id values
+SELECT COUNT(*)
+FROM sales_raw
+WHERE customer_id IS NULL;
+
+-- SALE_02: Identify missing discount values
+SELECT COUNT(*)
+FROM sales_raw
+WHERE discount IS NULL;
+
+```
+
+## ☑️ Cross-Table Validation
+
+Cross-table validation was performed to ensure **referential integrity** between the sales fact table and its related dimension tables (customers, products, and stores) prior to cleaning.
+
+### Issues Identified
+
+| Issue ID | Fact Table | Dimension Table | Foreign Key | Issue Description | Records Affected |
+|--------|------------|-----------------|-------------|------------------|------------------|
+| XREF_01 | sales_raw  | customers_raw  | customer_id | Orphaned customer references | 0 |
+| XREF_02 | sales_raw  | products_raw   | product_id  | Orphaned product references (`P999999`) | 200 |
+| XREF_03 | sales_raw  | stores_raw     | store_id    | Orphaned store references (`S999`) | 200 |
+
+---
+
+### Representative SQL Checks
+
+```sql
+-- Sales → Customers reference validation
+SELECT COUNT(*)
+FROM sales_raw s
+WHERE s.customer_id IS NOT NULL
+  AND NOT EXISTS (
+      SELECT 1
+      FROM customers_raw c
+      WHERE c.customer_id = s.customer_id
+  );
+
+
+
+
   
 
