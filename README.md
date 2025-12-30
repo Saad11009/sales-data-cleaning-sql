@@ -256,3 +256,137 @@ GROUP BY
 ```
 
 ---
+## 2️⃣ Cleaning Stage
+
+The cleaning stage applies **explicit, rule-based transformations** to resolve the data quality issues identified during profiling.  
+All cleaning actions were applied to **clean tables only**, ensuring raw source data remains unchanged for auditability and reproducibility.
+
+---
+
+## 👤 Customers Table — Cleaning
+
+**Table:** `customers_clean`  
+**Columns:** `customer_id, age, gender, city, email`
+
+### Cleaning Actions
+
+| Issue ID | Column | Issue Description           | Cleaning Action           |
+|--------|--------|-----------------------------|---------------------------|
+| CUST_01 | email  | NULL email values           | Reclassified as `Guest`   |
+| CUST_02 | gender | Invalid placeholder `???`   | Standardised to `Other`   |
+
+### Cleaning SQL
+
+```sql
+UPDATE customers_clean
+SET email = 'Guest'
+WHERE email IS NULL;
+
+UPDATE customers_clean
+SET gender = 'Other'
+WHERE gender = '???';
+```
+
+---
+
+## 👕 Products Table — Cleaning
+
+**Table:** `products_clean`  
+**Columns:** `product_id, category, color, size, season, supplier, cost_price, list_price, is_loss_making`
+
+- **Total records (pre-cleaning):** 50,000
+
+---
+
+### Cleaning Actions Applied
+
+| Issue ID | Column(s)              | Issue Description                  | Cleaning Action |
+|--------|------------------------|------------------------------------|-----------------|
+| PROD_01 | color                  | NULL color values                  | Standardised to `Unknown` |
+| PROD_02 | category               | Invalid placeholder `???`          | Standardised to `Unknown` |
+| PROD_03 | cost_price, list_price | Cost price greater than list price | Flagged using `is_loss_making` indicator |
+
+---
+
+### Cleaning SQL
+
+```sql
+-- PROD_01: Replace NULL colour values
+UPDATE products_clean
+SET color = 'Unknown'
+WHERE color IS NULL;
+
+-- PROD_02: Replace invalid category placeholder
+UPDATE products_clean
+SET category = 'Unknown'
+WHERE category = '???';
+
+-- PROD_03: Flag loss-making products (cost_price > list_price)
+ALTER TABLE products_clean
+ADD COLUMN IF NOT EXISTS is_loss_making BOOLEAN;
+
+UPDATE products_clean
+SET is_loss_making = TRUE
+WHERE cost_price::NUMERIC > list_price::NUMERIC;
+
+UPDATE products_clean
+SET is_loss_making = FALSE
+WHERE is_loss_making IS NULL;
+```
+
+---
+
+## 💰 Sales Table — Cleaning
+
+**Table:** `sales_clean`  
+**Columns:** `transaction_id, date, product_id, store_id, customer_id, quantity, discount, returned`
+
+- **Total records (pre-cleaning):** 50,000
+
+---
+
+### Cleaning Actions Applied
+
+| Issue ID | Column(s)   | Issue Description      | Cleaning Action |
+|--------|-------------|------------------------|-----------------|
+| SALE_01 | customer_id | NULL customer_id value | Rows removed from cleaned dataset |
+| SALE_02 | discount    | NULL discount value    | Inferred using median per product/store/date; fallback to `0` |
+
+---
+
+### Cleaning SQL
+
+```sql
+-- SALE_01: Remove guest sales (NULL customer_id)
+DELETE FROM sales_clean
+WHERE customer_id IS NULL;
+
+-- SALE_02: Infer missing discounts using median per product/store/date
+WITH discount_medians AS (
+    SELECT
+        product_id,
+        store_id,
+        date,
+        PERCENTILE_CONT(0.5)
+            WITHIN GROUP (ORDER BY discount::NUMERIC) AS median_discount
+    FROM sales_clean
+    WHERE discount IS NOT NULL
+    GROUP BY
+        product_id,
+        store_id,
+        date
+)
+UPDATE sales_clean s
+SET discount = dm.median_discount::TEXT
+FROM discount_medians dm
+WHERE
+    s.discount IS NULL
+    AND s.product_id = dm.product_id
+    AND s.store_id   = dm.store_id
+    AND s.date       = dm.date;
+
+-- Fallback: no peer discount available
+UPDATE sales_clean
+SET discount = '0'
+WHERE discount IS NULL;
+```
