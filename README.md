@@ -221,26 +221,40 @@ Cross-table validation was performed to ensure **referential integrity** between
 
 | Issue ID | Fact Table | Dimension Table | Foreign Key | Issue Description | Records Affected |
 |--------|------------|-----------------|-------------|------------------|------------------|
-| XREF_01 | sales_raw  | customers_raw  | customer_id | Orphaned customer references | 0 |
-| XREF_02 | sales_raw  | products_raw   | product_id  | Orphaned product references (`P999999`) | 200 |
-| XREF_03 | sales_raw  | stores_raw     | store_id    | Orphaned store references (`S999`) | 200 |
-
----
-
-### Representative SQL Checks
+| XREF_01 | sales_raw  | products_raw   | product_id  | Orphaned product references (`P999999`) | 200 |
+| XREF_02 | sales_raw  | stores_raw     | store_id    | Orphaned store references (`S999`) | 200 |
 
 ```sql
--- Sales → Customers reference validation
-SELECT COUNT(*)
+
+-- Sales(T) -> Product(T)
+SELECT s.product_id, COUNT(*) AS affected_sales_count
 FROM sales_raw s
-WHERE s.customer_id IS NOT NULL
-  AND NOT EXISTS (
-      SELECT 1
-      FROM customers_raw c
-      WHERE c.customer_id = s.customer_id
-  );
+WHERE
+    s.product_id IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1
+        FROM products_raw p
+        WHERE
+            p.product_id = s.product_id
+    )
+GROUP BY
+    s.product_id;
 
-
+-- Sales(T) -> Stores(T)
+SELECT s.store_id, COUNT(*) AS affected_sales_count
+FROM sales_raw s
+WHERE
+    s.store_id IS NOT NULL
+    AND NOT EXISTS (
+        SELECT 1
+        FROM stores_raw st
+        WHERE
+            st.store_id = s.store_id
+    )
+GROUP BY
+    s.store_id;
+```
+---
 
 
   
